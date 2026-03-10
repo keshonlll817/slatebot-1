@@ -33,42 +33,31 @@ last_slate_messages = []
 # ==============================
 
 def format_units(u):
-    if u == 1:
-        return "1U"
-    if u == 1.25:
-        return "1.25U"
-    if u == 1.5:
-        return "1.5U"
-    if u == 1.75:
-        return "1.75U"
-    if u == 2:
-        return "2U"
-    if u == 2.5:
-        return "2.5U"
-    if u == 3:
-        return "3U"
+    if u == 1: return "1U"
+    if u == 1.25: return "1.25U"
+    if u == 1.5: return "1.5U"
+    if u == 1.75: return "1.75U"
+    if u == 2: return "2U"
+    if u == 2.5: return "2.5U"
+    if u == 3: return "3U"
     return f"{u}U"
 
 def convert_league(name):
-    name = name.lower()
-    if "elite" in name:
-        return "ELITE"
-    if "setka" in name:
-        return "SETKA"
-    if "czech" in name:
-        return "CZECH"
-    if "cup" in name:
-        return "CUP"
+    name=name.lower()
+    if "elite" in name: return "ELITE"
+    if "setka" in name: return "SETKA"
+    if "czech" in name: return "CZECH"
+    if "cup" in name: return "CUP"
     return name.upper()
 
 def parse_time(est_time):
-    dt = datetime.strptime(est_time, "%m/%d %I:%M %p")
-    est = dt.strftime("%I:%M %p")
-    pst_dt = dt.replace(hour=(dt.hour - 3) % 24)
-    pst = pst_dt.strftime("%I:%M %p")
-    return est, pst
+    dt=datetime.strptime(est_time,"%m/%d %I:%M %p")
+    est=dt.strftime("%I:%M %p")
+    pst_dt=dt.replace(hour=(dt.hour-3)%24)
+    pst=pst_dt.strftime("%I:%M %p")
+    return est,pst
 
-async def send_long_message(channel, text):
+async def send_long_message(channel,text):
 
     chunks=[]
 
@@ -94,29 +83,21 @@ async def send_long_message(channel, text):
 
 
 # ==============================
-# 4+ PARSER (RECAP)
+# RECAP PARSERS
 # ==============================
 
 async def parse_four_plus(channel,start,end,limit=None):
 
-    wins=0
-    losses=0
-    washes=0
-
-    normal_w=0
-    normal_l=0
-
-    nuke_w=0
-    nuke_l=0
-
-    caution_w=0
-    caution_l=0
+    wins=losses=washes=0
+    normal_w=normal_l=0
+    nuke_w=nuke_l=0
+    caution_w=caution_l=0
 
     seen=set()
 
     async for msg in channel.history(limit=limit):
 
-        msg_time = msg.created_at.astimezone(EST)
+        msg_time=msg.created_at.astimezone(EST)
 
         if start and not(start<=msg_time<end):
             continue
@@ -125,14 +106,9 @@ async def parse_four_plus(channel,start,end,limit=None):
 
             line=line.strip()
 
-            if "vs" not in line:
-                continue
-
-            if "U @" in line or "U@" in line:
-                continue
-
-            if line in seen:
-                continue
+            if "vs" not in line: continue
+            if "U @" in line or "U@" in line: continue
+            if line in seen: continue
 
             seen.add(line)
 
@@ -147,42 +123,31 @@ async def parse_four_plus(channel,start,end,limit=None):
 
                 wins+=1
 
-                if is_nuke:
-                    nuke_w+=1
-                elif is_caution:
-                    caution_w+=1
-                else:
-                    normal_w+=1
+                if is_nuke: nuke_w+=1
+                elif is_caution: caution_w+=1
+                else: normal_w+=1
 
             elif "❌" in line:
 
                 losses+=1
 
-                if is_nuke:
-                    nuke_l+=1
-                elif is_caution:
-                    caution_l+=1
-                else:
-                    normal_l+=1
+                if is_nuke: nuke_l+=1
+                elif is_caution: caution_l+=1
+                else: normal_l+=1
 
     return wins,losses,washes,normal_w,normal_l,caution_w,caution_l,nuke_w,nuke_l
 
 
-# ==============================
-# TOTALS PARSER (RECAP)
-# ==============================
-
 async def parse_totals(channel,start,end,limit=None):
 
-    wins=0
-    losses=0
+    wins=losses=0
     units=0
 
     seen=set()
 
     async for msg in channel.history(limit=limit):
 
-        msg_time = msg.created_at.astimezone(EST)
+        msg_time=msg.created_at.astimezone(EST)
 
         if start and not(start<=msg_time<end):
             continue
@@ -191,11 +156,8 @@ async def parse_totals(channel,start,end,limit=None):
 
             line=line.strip()
 
-            if "vs" not in line:
-                continue
-
-            if line in seen:
-                continue
+            if "vs" not in line: continue
+            if line in seen: continue
 
             seen.add(line)
 
@@ -207,17 +169,10 @@ async def parse_totals(channel,start,end,limit=None):
             stake=float(unit_match.group(1))
 
             if "✅" in line:
-
                 wins+=1
                 units+=stake/1.2
 
-            elif "❌" in line:
-
-                losses+=1
-                units-=stake
-
-            elif "🪝" in line:
-
+            elif "❌" in line or "🪝" in line:
                 losses+=1
                 units-=stake
 
@@ -237,7 +192,7 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    content = message.content.lower().strip()
+    content=message.content.lower().strip()
 
 # ==============================
 # RECAP COMMANDS
@@ -258,7 +213,6 @@ async def on_message(message):
 
             start=(now-timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
             end=start+timedelta(days=1)
-
             title=f"DAILY RECAP — {start.strftime('%b')} {start.day} (EST)"
             limit=None
 
@@ -266,7 +220,6 @@ async def on_message(message):
 
             start=now.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
             end=now
-
             title=f"MONTHLY RECAP — {now.strftime('%b %Y')}"
             limit=None
 
@@ -283,17 +236,13 @@ async def on_message(message):
         fw,fl,fwash,nw,nl,cw,cl,kw,kl=await parse_four_plus(four_channel,start,end,limit)
         tw,tl,tunits=await parse_totals(totals_channel,start,end,limit)
 
-        four_units=(
-            (nw*1.1) - (nl*3) +
-            (cw*0.55) - (cl*1.5) +
-            (kw*2.2) - (kl*6)
-        )
+        four_units=( (nw*1.1)-(nl*3) + (cw*0.55)-(cl*1.5) + (kw*2.2)-(kl*6) )
 
         recap=f"📊 **{title}**\n\n"
 
         recap+="🏓 **4+ PLAYS**\n"
 
-        if fw+fl+fwash == 0:
+        if fw+fl+fwash==0:
             recap+="No plays graded.\n\n"
         else:
             recap+=f"Record: {fw}-{fl}"
@@ -318,6 +267,7 @@ async def on_message(message):
         await message.channel.send(recap)
         return
 
+
 # ==============================
 # BASIC COMMANDS
 # ==============================
@@ -328,5 +278,150 @@ async def on_message(message):
     if content=="ping":
         await message.channel.send("pong")
         return
+
+
+# ==============================
+# CSV SLATE ENGINE
+# ==============================
+
+    if not message.attachments:
+        return
+
+    attachment=message.attachments[0]
+
+    if not attachment.filename.endswith(".csv"):
+        return
+
+    file_bytes=await attachment.read()
+    decoded=file_bytes.decode("utf-8")
+
+    reader=csv.DictReader(io.StringIO(decoded))
+
+    four_plus={}
+    totals={}
+
+    for row in reader:
+
+        league=convert_league(row["League"])
+        p1=row["Player 1"]
+        p2=row["Player 2"]
+        play=row["Play"]
+        history=row["History"]
+        est_time=row["Time (Eastern)"]
+
+        est,pst=parse_time(est_time)
+
+        if "4+" in play:
+
+            match=re.search(r"\((\d+)/(\d+)\)",history)
+
+            if not match:
+                continue
+
+            losses=int(match.group(1))
+            total=int(match.group(2))
+            wins=total-losses
+            pct=wins/total
+
+            tier="normal"
+
+            if total>=40 and pct>=0.91:
+                tier="nuke"
+            elif wins<=22:
+                tier="caution"
+
+            key=f"{league}{p1}{p2}{est}"
+
+            four_plus[key]=(league,p1,p2,est,pst,wins,total,tier)
+
+        elif "Over/Under" in history:
+
+            match=re.search(r"\((\d+)/(\d+)\)",history)
+
+            if not match:
+                continue
+
+            wins=int(match.group(1))
+            total=int(match.group(2))
+            pct=wins/total
+
+            if total>=30:
+
+                if pct>=.95: units=2.5
+                elif pct>=.91: units=2
+                elif pct>=.86: units=1.5
+                elif pct>=.81: units=1.25
+                else: units=1
+
+            else:
+
+                if pct>=.95: units=2
+                elif pct>=.91: units=1.75
+                elif pct>=.86: units=1.5
+                elif pct>=.81: units=1.25
+                else: units=1
+
+            key=f"{league}{p1}{p2}{est}{play}"
+
+            totals[key]=(league,p1,p2,play,units,est,pst,wins,total)
+
+    old_messages=last_slate_messages.copy()
+    last_slate_messages=[]
+
+    await message.delete()
+
+    msg1=await message.channel.send("🏓 **4+ PLAYS** 🏓")
+    last_slate_messages.append(msg1)
+
+    if four_plus:
+
+        text=""
+
+        for v in four_plus.values():
+
+            league,p1,p2,est,pst,wins,total,tier=v
+
+            emoji=""
+            if tier=="nuke": emoji=" ☢️"
+            elif tier=="caution": emoji=" ⚠️"
+
+            text+=f"{league} – {p1} vs {p2} @ {est} EST / {pst} PST ({wins}/{total}){emoji}\n\n"
+
+        sent_msgs=await send_long_message(message.channel,text.strip())
+        last_slate_messages.extend(sent_msgs)
+
+    else:
+
+        msg2=await message.channel.send("No 4+ plays found.")
+        last_slate_messages.append(msg2)
+
+    msg3=await message.channel.send("🏓 **TOTAL PLAYS** 🏓")
+    last_slate_messages.append(msg3)
+
+    if totals:
+
+        text=""
+
+        for v in totals.values():
+
+            league,p1,p2,play,units,est,pst,wins,total=v
+
+            text+=f"{league} – {p1} vs {p2} {play} {format_units(units)} @ {est} EST / {pst} PST ({wins}/{total})\n\n"
+
+        sent_msgs=await send_long_message(message.channel,text.strip())
+        last_slate_messages.extend(sent_msgs)
+
+    else:
+
+        msg4=await message.channel.send("No total plays found.")
+        last_slate_messages.append(msg4)
+
+    for msg in old_messages:
+
+        try:
+            await msg.delete()
+        except:
+            pass
+
 
 client.run(TOKEN)
