@@ -20,7 +20,8 @@ FOUR_PLUS_CHANNEL = 1443356395935240302
 TOTALS_CHANNEL = 1446203029916356649
 TEST_CHANNEL = 1471792196582637728
 
-EST = timezone(timedelta(hours=-5))
+from zoneinfo import ZoneInfo
+EST = ZoneInfo("America/New_York")
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -425,3 +426,4 @@ async def on_message(message):
 
 
 client.run(TOKEN)
+
