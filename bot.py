@@ -199,6 +199,10 @@ async def on_message(message):
 # RECAP COMMANDS
 # ==============================
 
+    # ==============================
+# RECAP COMMANDS
+# ==============================
+
     if content.startswith("!recap"):
 
         now=datetime.now(EST)
@@ -209,6 +213,13 @@ async def on_message(message):
             end=None
             limit=50
             title=f"TEST RECAP — {now.strftime('%b')} {now.day} (EST)"
+
+        elif "today" in content:
+
+            start=now.replace(hour=0,minute=0,second=0,microsecond=0)
+            end=now
+            title=f"TODAY RECAP — {now.strftime('%b')} {now.day} (EST)"
+            limit=None
 
         elif "daily" in content:
 
@@ -226,7 +237,7 @@ async def on_message(message):
 
         else:
             return
-
+            
         if message.channel.id==TEST_CHANNEL:
             four_channel=message.channel
             totals_channel=message.channel
