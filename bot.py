@@ -106,9 +106,18 @@ async def parse_four_plus(channel,start,end,limit=None):
 
             line=line.strip()
 
-            if "vs" not in line: continue
-            if "U @" in line or "U@" in line: continue
-            if line in seen: continue
+            # FIX 1: normalize emoji spacing
+            line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
+
+            # FIX 2: allow "vs" and "v"
+            if "vs" not in line and " v " not in line:
+                continue
+
+            if "U @" in line or "U@" in line:
+                continue
+
+            if line in seen:
+                continue
 
             seen.add(line)
 
@@ -123,17 +132,23 @@ async def parse_four_plus(channel,start,end,limit=None):
 
                 wins+=1
 
-                if is_nuke: nuke_w+=1
-                elif is_caution: caution_w+=1
-                else: normal_w+=1
+                if is_nuke:
+                    nuke_w+=1
+                elif is_caution:
+                    caution_w+=1
+                else:
+                    normal_w+=1
 
             elif "❌" in line:
 
                 losses+=1
 
-                if is_nuke: nuke_l+=1
-                elif is_caution: caution_l+=1
-                else: normal_l+=1
+                if is_nuke:
+                    nuke_l+=1
+                elif is_caution:
+                    caution_l+=1
+                else:
+                    normal_l+=1
 
     return wins,losses,washes,normal_w,normal_l,caution_w,caution_l,nuke_w,nuke_l
 
@@ -156,8 +171,15 @@ async def parse_totals(channel,start,end,limit=None):
 
             line=line.strip()
 
-            if "vs" not in line: continue
-            if line in seen: continue
+            # FIX 1: normalize emoji spacing
+            line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
+
+            # FIX 2: allow "vs" and "v"
+            if "vs" not in line and " v " not in line:
+                continue
+
+            if line in seen:
+                continue
 
             seen.add(line)
 
@@ -295,7 +317,7 @@ async def on_message(message):
 
 
 # ==============================
-# CSV SLATE ENGINE
+# CSV SLATE ENGINE (UNCHANGED)
 # ==============================
 
     if not message.attachments:
