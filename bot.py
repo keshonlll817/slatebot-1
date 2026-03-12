@@ -102,14 +102,16 @@ async def parse_four_plus(channel,start,end,limit=None):
         if start and not(start<=msg_time<end):
             continue
 
-        for line in msg.content.split("\n"):
+        # merge multi-line plays
+        message_text = msg.content.replace("\n"," ")
+
+        for line in message_text.split("  "):
 
             line=line.strip()
 
-            # FIX 1: normalize emoji spacing
+            # normalize emoji spacing
             line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
 
-            # FIX 2: allow "vs" and "v"
             if "vs" not in line and " v " not in line:
                 continue
 
@@ -167,14 +169,15 @@ async def parse_totals(channel,start,end,limit=None):
         if start and not(start<=msg_time<end):
             continue
 
-        for line in msg.content.split("\n"):
+        # merge multi-line plays
+        message_text = msg.content.replace("\n"," ")
+
+        for line in message_text.split("  "):
 
             line=line.strip()
 
-            # FIX 1: normalize emoji spacing
             line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
 
-            # FIX 2: allow "vs" and "v"
             if "vs" not in line and " v " not in line:
                 continue
 
