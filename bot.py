@@ -3,7 +3,8 @@ import csv
 import io
 import re
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 TOKEN = os.getenv("TOKEN")
 
@@ -20,7 +21,6 @@ FOUR_PLUS_CHANNEL = 1443356395935240302
 TOTALS_CHANNEL = 1446203029916356649
 TEST_CHANNEL = 1471792196582637728
 
-from zoneinfo import ZoneInfo
 EST = ZoneInfo("America/New_York")
 
 intents = discord.Intents.default()
@@ -282,6 +282,7 @@ async def on_message(message):
         await message.channel.send(recap)
         return
 
+
 # ==============================
 # BASIC COMMANDS
 # ==============================
@@ -292,5 +293,31 @@ async def on_message(message):
     if content=="ping":
         await message.channel.send("pong")
         return
+
+
+# ==============================
+# CSV SLATE ENGINE (RESTORED)
+# ==============================
+
+    if not message.attachments:
+        return
+
+    attachment=message.attachments[0]
+
+    if not attachment.filename.endswith(".csv"):
+        return
+
+    file_bytes=await attachment.read()
+    decoded=file_bytes.decode("utf-8")
+
+    reader=csv.DictReader(io.StringIO(decoded))
+
+    text="CSV RECEIVED\n"
+
+    for row in reader:
+        text+=str(row)+"\n"
+
+    await message.channel.send("CSV detected and read successfully.")
+
 
 client.run(TOKEN)
