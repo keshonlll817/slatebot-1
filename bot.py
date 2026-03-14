@@ -102,14 +102,12 @@ async def parse_four_plus(channel,start,end,limit=None):
         if start and not(start<=msg_time<end):
             continue
 
-        # merge multi-line plays
         message_text = msg.content.replace("\n"," ")
 
         for line in message_text.split("  "):
 
             line=line.strip()
 
-            # normalize emoji spacing
             line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
 
             if "vs" not in line and " v " not in line:
@@ -169,7 +167,6 @@ async def parse_totals(channel,start,end,limit=None):
         if start and not(start<=msg_time<end):
             continue
 
-        # merge multi-line plays
         message_text = msg.content.replace("\n"," ")
 
         for line in message_text.split("  "):
@@ -320,7 +317,7 @@ async def on_message(message):
 
 
 # ==============================
-# CSV SLATE ENGINE (UNCHANGED)
+# CSV SLATE ENGINE
 # ==============================
 
     if not message.attachments:
@@ -444,14 +441,17 @@ async def on_message(message):
 
         sent_msgs=await send_long_message(message.channel,text.strip())
         last_slate_messages.extend(sent_msgs)
+
 # ==============================
 # DELETE PREVIOUS SLATE
 # ==============================
 
-for msg in old_messages:
-    try:
-        await msg.delete()
-    except:
-        pass
+    if old_messages:
+        for msg in list(old_messages):
+            try:
+                await msg.delete()
+            except:
+                pass
+
 
 client.run(TOKEN)
