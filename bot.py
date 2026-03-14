@@ -93,6 +93,8 @@ async def parse_four_plus(channel,start,end,limit=None):
     nuke_w=nuke_l=0
     caution_w=caution_l=0
 
+    league_stats={}
+
     seen=set()
 
     async for msg in channel.history(limit=limit):
@@ -121,6 +123,12 @@ async def parse_four_plus(channel,start,end,limit=None):
 
             seen.add(line)
 
+            league_match=re.match(r'([A-Z]+)',line)
+            league=league_match.group(1) if league_match else "OTHER"
+
+            if league not in league_stats:
+                league_stats[league]={"w":0,"l":0,"u":0}
+
             is_nuke="☢️" in line
             is_caution="⚠️" in line
 
@@ -131,26 +139,34 @@ async def parse_four_plus(channel,start,end,limit=None):
             if "✅" in line:
 
                 wins+=1
+                league_stats[league]["w"]+=1
 
                 if is_nuke:
                     nuke_w+=1
+                    league_stats[league]["u"]+=2.2
                 elif is_caution:
                     caution_w+=1
+                    league_stats[league]["u"]+=0.55
                 else:
                     normal_w+=1
+                    league_stats[league]["u"]+=1.1
 
             elif "❌" in line:
 
                 losses+=1
+                league_stats[league]["l"]+=1
 
                 if is_nuke:
                     nuke_l+=1
+                    league_stats[league]["u"]-=6
                 elif is_caution:
                     caution_l+=1
+                    league_stats[league]["u"]-=1.5
                 else:
                     normal_l+=1
+                    league_stats[league]["u"]-=3
 
-    return wins,losses,washes,normal_w,normal_l,caution_w,caution_l,nuke_w,nuke_l
+    return wins,losses,washes,normal_w,normal_l,caution_w,caution_l,nuke_w,nuke_l,league_stats
 
 
 async def parse_totals(channel,start,end,limit=None):
@@ -269,7 +285,7 @@ async def on_message(message):
             four_channel=client.get_channel(FOUR_PLUS_CHANNEL)
             totals_channel=client.get_channel(TOTALS_CHANNEL)
 
-        fw,fl,fwash,nw,nl,cw,cl,kw,kl=await parse_four_plus(four_channel,start,end,limit)
+        fw,fl,fwash,nw,nl,cw,cl,kw,kl,league_stats=await parse_four_plus(four_channel,start,end,limit)
         tw,tl,tunits=await parse_totals(totals_channel,start,end,limit)
 
         four_units=( (nw*1.1)-(nl*3) + (cw*0.55)-(cl*1.5) + (kw*2.2)-(kl*6) )
@@ -299,6 +315,11 @@ async def on_message(message):
         else:
             recap+=f"Record: {tw}-{tl}\n"
             recap+=f"Units: {tunits:+.2f}U"
+
+        recap+="\n\n🏓 **LEAGUE BREAKDOWN**\n"
+
+        for lg,data in league_stats.items():
+            recap+=f"{lg} {data['w']}-{data['l']} {data['u']:+.2f}U\n"
 
         await message.channel.send(recap)
         return
@@ -441,10 +462,6 @@ async def on_message(message):
 
         sent_msgs=await send_long_message(message.channel,text.strip())
         last_slate_messages.extend(sent_msgs)
-
-# ==============================
-# DELETE PREVIOUS SLATE
-# ==============================
 
     if old_messages:
         for msg in list(old_messages):
