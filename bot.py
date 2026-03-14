@@ -444,6 +444,14 @@ async def on_message(message):
 
         sent_msgs=await send_long_message(message.channel,text.strip())
         last_slate_messages.extend(sent_msgs)
+# ==============================
+# DELETE PREVIOUS SLATE
+# ==============================
 
+for msg in old_messages:
+    try:
+        await msg.delete()
+    except:
+        pass
 
 client.run(TOKEN)
