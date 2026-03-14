@@ -109,7 +109,6 @@ async def parse_four_plus(channel,start,end,limit=None):
         for line in message_text.split("  "):
 
             line=line.strip()
-
             line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
 
             if "vs" not in line and " v " not in line:
@@ -123,8 +122,18 @@ async def parse_four_plus(channel,start,end,limit=None):
 
             seen.add(line)
 
-            league_match=re.match(r'([A-Z]+)',line)
-            league=league_match.group(1) if league_match else "OTHER"
+            line_lower=line.lower()
+
+            if "elite" in line_lower:
+                league="ELITE"
+            elif "setka" in line_lower:
+                league="SETKA"
+            elif "czech" in line_lower:
+                league="CZECH"
+            elif "cup" in line_lower:
+                league="CUP"
+            else:
+                league="OTHER"
 
             if league not in league_stats:
                 league_stats[league]={"w":0,"l":0,"u":0}
@@ -188,7 +197,6 @@ async def parse_totals(channel,start,end,limit=None):
         for line in message_text.split("  "):
 
             line=line.strip()
-
             line=line.replace(")❌", ") ❌").replace(")✅", ") ✅")
 
             if "vs" not in line and " v " not in line:
@@ -241,35 +249,30 @@ async def on_message(message):
         now=datetime.now(EST)
 
         if "test" in content:
-
             start=None
             end=None
             limit=50
             title=f"TEST RECAP — {now.strftime('%b')} {now.day} (EST)"
 
         elif "today" in content:
-
             start=now.replace(hour=0,minute=0,second=0,microsecond=0)
             end=now
             title=f"TODAY RECAP — {now.strftime('%b')} {now.day} (EST)"
             limit=None
 
         elif "lifetime" in content:
-
             start=None
             end=None
             title="LIFETIME RECAP"
             limit=None
 
         elif "daily" in content:
-
             start=(now-timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
             end=start+timedelta(days=1)
             title=f"DAILY RECAP — {start.strftime('%b')} {start.day} (EST)"
             limit=None
 
         elif "monthly" in content:
-
             start=now.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
             end=now
             title=f"MONTHLY RECAP — {now.strftime('%b %Y')}"
@@ -316,12 +319,27 @@ async def on_message(message):
             recap+=f"Record: {tw}-{tl}\n"
             recap+=f"Units: {tunits:+.2f}U"
 
-        recap+="\n\n🏓 **LEAGUE BREAKDOWN**\n"
-
-        for lg,data in league_stats.items():
-            recap+=f"{lg} {data['w']}-{data['l']} {data['u']:+.2f}U\n"
-
         await message.channel.send(recap)
+
+        sorted_leagues = sorted(league_stats.items(), key=lambda x: x[1]["u"], reverse=True)
+
+        league_msg="🏓 **LEAGUE BREAKDOWN**\n━━━━━━━━━━━━━━━━━━\n\n"
+
+        for i,(lg,data) in enumerate(sorted_leagues):
+
+            if i==0:
+                icon="🔥"
+            elif i==1:
+                icon="🟢"
+            elif i==2:
+                icon="🟡"
+            else:
+                icon="🔻"
+
+            league_msg+=f"{icon} {lg}\nRecord: {data['w']}-{data['l']}\nUnits: {data['u']:+.2f}U\n\n"
+
+        await message.channel.send(league_msg)
+
         return
 
 
@@ -463,12 +481,11 @@ async def on_message(message):
         sent_msgs=await send_long_message(message.channel,text.strip())
         last_slate_messages.extend(sent_msgs)
 
-    if old_messages:
-        for msg in list(old_messages):
-            try:
-                await msg.delete()
-            except:
-                pass
+    for msg in old_messages:
+        try:
+            await msg.delete()
+        except:
+            pass
 
 
 client.run(TOKEN)
