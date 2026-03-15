@@ -440,10 +440,19 @@ async def on_message(message):
 
             totals[key]=(league,p1,p2,play,units,est,pst,wins,total)
 
-    old_messages=last_slate_messages.copy()
+
+# DELETE PREVIOUS SLATE FIRST
+    for msg in last_slate_messages:
+        try:
+            await msg.delete()
+        except:
+            pass
+
     last_slate_messages=[]
 
     await message.delete()
+
+# SEND NEW SLATE
 
     msg1=await message.channel.send("🏓 **4+ PLAYS** 🏓")
     last_slate_messages.append(msg1)
@@ -480,12 +489,5 @@ async def on_message(message):
 
         sent_msgs=await send_long_message(message.channel,text.strip())
         last_slate_messages.extend(sent_msgs)
-
-    for msg in old_messages:
-        try:
-            await msg.delete()
-        except:
-            pass
-
 
 client.run(TOKEN)
